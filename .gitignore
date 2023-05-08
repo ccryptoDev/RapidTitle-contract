@@ -1,0 +1,9 @@
+## npm packages
+node_modules/
+
+## Misc
+artifacts/
+cache/
+arguments.js
+secrets.json
+arguments.js
