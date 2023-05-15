@@ -53,7 +53,7 @@ contract RT_ERC721 is ERC165, IRT_ERC721, ERC721Enumerable, AccessControlEnumera
   /// @notice	Sets the Base URI for ALL tokens
 	/// @dev	Can be overriden by the specific token URI
 	/// @param	newURI	URI to be used
-  function setBaseURI(string calldata newURI) external onlyRole(DEALER) {
+  function setBaseURI(string calldata newURI) public {
 		baseURI = newURI;
 		emit BaseURIChanged(newURI);
 	}
@@ -175,8 +175,7 @@ contract RT_ERC721 is ERC165, IRT_ERC721, ERC721Enumerable, AccessControlEnumera
     uint _lenderId, 
     uint _sellerId
   ) 
-    external 
-    onlyRole(DEALER)
+    public
   {
     require(_to != address(0), "The minter is wrong address");
     require(bytes(_vehicleURI).length > 0, "The vehicle URI is required");

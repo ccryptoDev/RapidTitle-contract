@@ -22,7 +22,7 @@ module.exports = {
     },
     sepolia: {
 		  url: 'https://eth-sepolia.g.alchemy.com/v2/CCrOmtkhEIwvOWckD6fcq_bnTud_MlJj',
-      gas: 10000000,
+      gas: 300000,
 		  accounts: [`0x${privateKey}`]
 	  },
     rinkeby: {
