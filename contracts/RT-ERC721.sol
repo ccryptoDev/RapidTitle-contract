@@ -25,6 +25,7 @@ contract RT_ERC721 is ERC165, IRT_ERC721, ERC721Enumerable, AccessControlEnumera
     uint dealer_id;
     uint seller_id;
     uint lender_id;
+    address ownerWallet;
     Status status;
 	}
 
@@ -89,7 +90,7 @@ contract RT_ERC721 is ERC165, IRT_ERC721, ERC721Enumerable, AccessControlEnumera
 
   /// @notice Returns the title information
   /// @param _titleId The ID of the title
-  function getTitle(uint _titleId) external view returns(uint, uint, uint, uint, uint, Status) {
+  function getTitle(uint _titleId) external view returns(uint, uint, uint, uint, uint, address, Status) {
     titles memory titleInform = _titles[_titleId];
     return (
       titleInform.title_id,
@@ -97,6 +98,7 @@ contract RT_ERC721 is ERC165, IRT_ERC721, ERC721Enumerable, AccessControlEnumera
       titleInform.dealer_id,
       titleInform.lender_id,
       titleInform.seller_id,
+      titleInform.ownerWallet,
       titleInform.status
     );
   }
@@ -193,6 +195,7 @@ contract RT_ERC721 is ERC165, IRT_ERC721, ERC721Enumerable, AccessControlEnumera
     newTitle.dealer_id = _dealerId;
     newTitle.lender_id = _lenderId;
     newTitle.seller_id = _sellerId;
+    newTitle.ownerWallet = _to;
     newTitle.status = Status.Created;
 
     emit TitleCreated(_to, _id);

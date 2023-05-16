@@ -15,7 +15,7 @@ interface IRT_ERC721 is IERC721 {
   event StatusUpdated(uint _titleId, uint _state);
 
   function getTitlesCount() external view returns(uint);
-  function getTitle(uint _titleId) external view returns(uint, uint, uint, uint, uint , Status);
+  function getTitle(uint _titleId) external view returns(uint, uint, uint, uint, uint , address, Status);
 
   function mintTitle(
     address _to, 
