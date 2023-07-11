@@ -18,15 +18,23 @@ contract RT_ERC721 is ERC165, IRT_ERC721, ERC721Enumerable, AccessControlEnumera
 	bytes32 public constant DEALER = keccak256("DEALER");
 	bytes32 public constant SELLER = keccak256("SELLER");
 	bytes32 public constant LENDER = keccak256("LENDER");
+	bytes32 public constant DMV = keccak256("DMV");
   
-  struct titles {
+  struct Holds_Status {
+    bool status;
+    uint256 updateAt;
+  }
+
+  struct Titles {
     uint title_id;
     uint vehicle_id;
     uint dealer_id;
     uint seller_id;
     uint lender_id;
+    uint dmv_id;
     address ownerWallet;
-    Status status;
+    uint256 createAt;
+    mapping (uint8 => Holds_Status) holds_status;
 	}
 
   //URIs
@@ -35,8 +43,7 @@ contract RT_ERC721 is ERC165, IRT_ERC721, ERC721Enumerable, AccessControlEnumera
 
   uint256 lastTokenId;
   
-  titles[] private _titles;
-  Status private _status;
+  Titles[] private _titles;
 
   /**
   * @notice Initializer
@@ -49,6 +56,7 @@ contract RT_ERC721 is ERC165, IRT_ERC721, ERC721Enumerable, AccessControlEnumera
 		_setupRole(DEALER, msg.sender);
 		_setupRole(SELLER, msg.sender);
 		_setupRole(LENDER, msg.sender);
+		_setupRole(DMV, msg.sender);
   }
 
   /// @notice	Sets the Base URI for ALL tokens
@@ -90,19 +98,39 @@ contract RT_ERC721 is ERC165, IRT_ERC721, ERC721Enumerable, AccessControlEnumera
 
   /// @notice Returns the title information
   /// @param _titleId The ID of the title
-  function getTitle(uint _titleId) external view returns(uint, uint, uint, uint, uint, address, Status) {
-    titles memory titleInform = _titles[_titleId];
+  function getTitle(uint _titleId) 
+    external 
+    view 
+    returns(uint, uint, uint, uint, uint, uint, address, uint256) 
+  {
+    Titles storage titleInform = _titles[_titleId];
     return (
       titleInform.title_id,
       titleInform.vehicle_id,
       titleInform.dealer_id,
       titleInform.lender_id,
       titleInform.seller_id,
+      titleInform.dmv_id,
       titleInform.ownerWallet,
-      titleInform.status
+      titleInform.createAt
     );
   }
 
+  /// @notice Return holds status of the title
+  /// @param _titleId The ID of title
+  /// @param _holds_status_id The ID of holds status
+  function getHoldsStatus(uint _titleId, uint8 _holds_status_id) 
+    external 
+    view 
+    returns (bool, uint256) 
+  {
+    Holds_Status memory holds_status_info = _titles[_titleId].holds_status[_holds_status_id];
+    return (
+      holds_status_info.status,
+      holds_status_info.updateAt
+    );
+  }
+  
   /**
   * @notice tokenURI overrride function.
   */
@@ -169,18 +197,23 @@ contract RT_ERC721 is ERC165, IRT_ERC721, ERC721Enumerable, AccessControlEnumera
   * @param _dealerId The id of dealer.
   * @param _lenderId The id of lender.
   * @param _sellerId The id of seller.
+  * @param _dmvId The id of DMV.
+  * @param holds_number The number of holds status.
   */
   function mintTitle(
     address _to, 
     string memory _vehicleURI, 
     uint _dealerId, 
     uint _lenderId, 
-    uint _sellerId
+    uint _sellerId,
+    uint _dmvId,
+    uint8 holds_number
   ) 
     public
   {
     require(_to != address(0), "The minter is wrong address");
     require(bytes(_vehicleURI).length > 0, "The vehicle URI is required");
+    require(holds_number > 0, "The holds status number is required");
 
     uint256 _id = nextTokenId();
     _safeMint(_to, _id, "");
@@ -188,15 +221,22 @@ contract RT_ERC721 is ERC165, IRT_ERC721, ERC721Enumerable, AccessControlEnumera
 
     vehicleURI[_id] = _vehicleURI;
 
-    titles storage newTitle = _titles.push();
+    Titles storage newTitle = _titles.push();
 
     newTitle.title_id = _id;
     newTitle.vehicle_id = _id;
     newTitle.dealer_id = _dealerId;
     newTitle.lender_id = _lenderId;
     newTitle.seller_id = _sellerId;
+    newTitle.dmv_id = _dmvId;
     newTitle.ownerWallet = _to;
-    newTitle.status = Status.Created;
+    newTitle.createAt = block.timestamp;
+    // newTitle.status = Status.Created;
+
+    for(uint8 i = 0; i < holds_number; i++) {
+      newTitle.holds_status[i].status = false;
+      newTitle.holds_status[i].updateAt = 0;
+    } 
 
     emit TitleCreated(_to, _id);
   }
@@ -204,11 +244,12 @@ contract RT_ERC721 is ERC165, IRT_ERC721, ERC721Enumerable, AccessControlEnumera
   /// @notice Updates the status of the title
   /// @param _titleId The ID of the title to update
   /// @param _state The status to be updated
-  function updateTitleStatus(uint _titleId, uint _state) external {
-    titles storage _currentTitle = _titles[_titleId];
-    _currentTitle.status = Status(_state);
+  function updateTitleStatus(uint _titleId, uint8 holds_status_id, bool _state) external {
+    Titles storage _currentTitle = _titles[_titleId];
+    _currentTitle.holds_status[holds_status_id].status = _state;
+    _currentTitle.holds_status[holds_status_id].updateAt = block.timestamp;
     
-    emit StatusUpdated(_titleId, _state);
+    emit StatusUpdated(_titleId, holds_status_id, _state, _currentTitle.holds_status[holds_status_id].updateAt);
   }
 
   /**
