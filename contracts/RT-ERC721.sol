@@ -34,8 +34,9 @@ contract RT_ERC721 is ERC165, IRT_ERC721, ERC721Enumerable, AccessControlEnumera
     uint dmv_id;
     address ownerWallet;
     uint256 createAt;
-    mapping (uint8 => Holds_Status) holds_status;
 	}
+
+  mapping(uint256 => Holds_Status[]) internal titleStatus;
 
   //URIs
 	string internal baseURI;
@@ -124,7 +125,9 @@ contract RT_ERC721 is ERC165, IRT_ERC721, ERC721Enumerable, AccessControlEnumera
     view 
     returns (bool, uint256) 
   {
-    Holds_Status memory holds_status_info = _titles[_titleId].holds_status[_holds_status_id];
+    require( _holds_status_id < titleStatus[_titleId].length, "Invalid holds status index" );
+
+    Holds_Status memory holds_status_info = titleStatus[_titleId][_holds_status_id];
     return (
       holds_status_info.status,
       holds_status_info.updateAt
@@ -234,8 +237,8 @@ contract RT_ERC721 is ERC165, IRT_ERC721, ERC721Enumerable, AccessControlEnumera
     // newTitle.status = Status.Created;
 
     for(uint8 i = 0; i < holds_number; i++) {
-      newTitle.holds_status[i].status = false;
-      newTitle.holds_status[i].updateAt = 0;
+      Holds_Status memory newStatus = Holds_Status(false, 0);
+      titleStatus[_id].push(newStatus);
     } 
 
     emit TitleCreated(_to, _id);
@@ -245,11 +248,14 @@ contract RT_ERC721 is ERC165, IRT_ERC721, ERC721Enumerable, AccessControlEnumera
   /// @param _titleId The ID of the title to update
   /// @param _state The status to be updated
   function updateTitleStatus(uint _titleId, uint8 holds_status_id, bool _state) external {
-    Titles storage _currentTitle = _titles[_titleId];
-    _currentTitle.holds_status[holds_status_id].status = _state;
-    _currentTitle.holds_status[holds_status_id].updateAt = block.timestamp;
+    require(holds_status_id < titleStatus[_titleId].length, "Invalid holds status index");
+
+    Holds_Status storage _currentTitleStatus = titleStatus[_titleId][holds_status_id];
+
+    _currentTitleStatus.status = _state;
+    _currentTitleStatus.updateAt = block.timestamp;
     
-    emit StatusUpdated(_titleId, holds_status_id, _state, _currentTitle.holds_status[holds_status_id].updateAt);
+    emit StatusUpdated(_titleId, holds_status_id, _state, _currentTitleStatus.updateAt);
   }
 
   /**
