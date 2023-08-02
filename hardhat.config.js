@@ -21,7 +21,7 @@ module.exports = {
       accounts: [`0x${privateKey}`]
     },
     sepolia: {
-		  url: 'https://eth-sepolia.g.alchemy.com/v2/CCrOmtkhEIwvOWckD6fcq_bnTud_MlJj',
+		  url: 'https://eth-sepolia.g.alchemy.com/v2/v5h_FiMJrtauW0bi5PNrGLlIMxG4WISv',
       gas: 300000,
 		  accounts: [`0x${privateKey}`]
 	  },
